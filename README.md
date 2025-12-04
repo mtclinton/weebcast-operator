@@ -161,16 +161,67 @@ make logs
 kubectl logs -f -n weebcast-system deployment/weebcast-operator
 ```
 
-## Development
+## Local Development
 
-### Build Locally
+### Prerequisites
+
+- Go 1.21+
+- Access to a Kubernetes cluster (local or remote)
+- kubectl configured to access your cluster
+
+### Quick Start (Full Stack)
+
+Run the operator, API, and frontend all at once:
+
+```bash
+make dev
+```
+
+This starts:
+- **Operator** on your machine (connected to your K8s cluster)
+- **API Worker** at http://localhost:8787
+- **Frontend** at http://localhost:8000
+
+In another terminal, create a sample monitor:
+
+```bash
+kubectl apply -f config/samples/weebcast_v1alpha1_animemonitor.yaml
+```
+
+Press `Ctrl+C` to stop all services.
+
+### Running Components Individually
+
+If you prefer running components separately:
+
+```bash
+# Terminal 1: Operator
+make dev-operator
+
+# Terminal 2: API Worker  
+make dev-api
+
+# Terminal 3: Frontend
+make dev-frontend
+```
+
+### Check Status
+
+```bash
+make status
+# or
+kubectl get animemonitors -A -o wide
+kubectl describe animemonitor mal-activity
+```
+
+### Build from Source
 
 ```bash
 # Build the binary
 make build
 
-# Run locally (requires kubeconfig)
-make run
+# The binary is output to bin/manager
+./bin/manager
 ```
 
 ### Build Docker Image
@@ -187,6 +238,100 @@ make docker-push IMG=your-registry/weebcast-operator:tag
 
 ```bash
 make test
+```
+
+## Website
+
+The project includes a real-time dashboard website that displays anime activity data from the operator.
+
+### Components
+
+```
+website/
+├── frontend/          # Static HTML/CSS/JS dashboard
+│   └── index.html     # Single-page app with live activity display
+├── worker/            # Cloudflare Worker API
+│   ├── index.js       # API endpoints for activity data
+│   └── wrangler.toml  # Cloudflare Worker config
+└── SETUP.md           # Detailed deployment guide
+```
+
+### Quick Local Preview
+
+To preview the frontend locally:
+
+```bash
+cd website/frontend
+
+# Using Python
+python -m http.server 8000
+
+# Using Node.js
+npx serve .
+```
+
+Then open http://localhost:8000 in your browser.
+
+> **Note:** The frontend will show demo data when the API is unavailable, so you can preview the UI without deploying the worker.
+
+### Deploying the Website
+
+The website is designed to run on Cloudflare's free tier:
+
+1. **Deploy the API Worker:**
+
+```bash
+cd website/worker
+
+# Install Wrangler CLI
+npm install -g wrangler
+wrangler login
+
+# Create KV namespace for storing activity data
+wrangler kv:namespace create "WEEBCAST_KV"
+# Update wrangler.toml with the namespace ID from output
+
+# Deploy
+wrangler deploy
+```
+
+2. **Deploy the Frontend:**
+
+```bash
+cd website/frontend
+wrangler pages deploy . --project-name=weebcast
+```
+
+3. **Connect the Operator:**
+
+Create a Kubernetes secret with Cloudflare credentials:
+
+```bash
+kubectl create secret generic cloudflare-credentials \
+  --from-literal=account-id=YOUR_ACCOUNT_ID \
+  --from-literal=kv-namespace-id=YOUR_KV_NAMESPACE_ID \
+  --from-literal=api-token=YOUR_API_TOKEN \
+  -n weebcast-system
+```
+
+See [website/SETUP.md](website/SETUP.md) for the complete deployment guide.
+
+### API Endpoints
+
+The Cloudflare Worker exposes these endpoints:
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/activity` | Overall MAL activity status |
+| `GET /api/activity/all` | All monitored anime statuses |
+| `GET /api/anime/:id` | Specific anime by MAL ID |
+| `GET /api/trending` | Currently trending anime list |
+
+Example:
+
+```bash
+curl https://api.weebcast.com/api/activity
+curl https://api.weebcast.com/api/trending
 ```
 
 ## Architecture

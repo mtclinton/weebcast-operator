@@ -93,6 +93,36 @@ deploy-samples: ## Deploy sample AnimeMonitor resources.
 undeploy-samples: ## Remove sample AnimeMonitor resources.
 	kubectl delete -f config/samples/
 
+##@ Local Development
+
+.PHONY: dev
+dev: install ## Run operator, API worker, and frontend locally.
+	@echo "🚀 Starting local development environment..."
+	@echo ""
+	@echo "Starting services:"
+	@echo "  - Operator:  go run cmd/main.go"
+	@echo "  - API:       http://localhost:8787"
+	@echo "  - Frontend:  http://localhost:8000"
+	@echo ""
+	@trap 'kill 0' EXIT; \
+	go run cmd/main.go & \
+	(cd website/worker && wrangler dev --local --port 8787) & \
+	(cd website/frontend && python3 -m http.server 8000) & \
+	wait
+
+.PHONY: dev-operator
+dev-operator: install ## Run only the operator locally.
+	go run cmd/main.go
+
+.PHONY: dev-api
+dev-api: ## Run only the Cloudflare Worker API locally.
+	cd website/worker && wrangler dev --local --port 8787
+
+.PHONY: dev-frontend
+dev-frontend: ## Run only the frontend locally.
+	@echo "Frontend available at http://localhost:8000"
+	cd website/frontend && python3 -m http.server 8000
+
 ##@ Utilities
 
 .PHONY: mod-tidy

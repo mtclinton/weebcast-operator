@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weebcast - Anime Activity Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a25;
+            --accent-pink: #ff2d75;
+            --accent-cyan: #00f0ff;
+            --accent-purple: #b14eff;
+            --text-primary: #ffffff;
+            --text-secondary: #8a8a9a;
+            --gradient-hot: linear-gradient(135deg, #ff2d75, #ff6b35);
+            --gradient-cool: linear-gradient(135deg, #00f0ff, #b14eff);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 45, 117, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 240, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(177, 78, 255, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        .logo {
+            font-size: 4rem;
+            font-weight: 800;
+            background: var(--gradient-hot);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-family: 'Space Mono', monospace;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Activity Status Card */
+        .status-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 3rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-hot);
+        }
+
+        .status-card.high::before {
+            background: var(--gradient-hot);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .status-card.medium::before {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+        }
+
+        .status-card.low::before {
+            background: var(--gradient-cool);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .activity-level {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .level-indicator {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            background: var(--bg-secondary);
+            border: 3px solid var(--accent-pink);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .level-text h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .level-text p {
+            color: var(--text-secondary);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .last-updated {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        .weebcast-status {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-cool);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.5rem;
+        }
+
+        /* Trending Section */
+        .trending-section {
+            margin-top: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--gradient-hot);
+            border-radius: 2px;
+        }
+
+        .trending-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .anime-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .anime-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(255, 45, 117, 0.15);
+        }
+
+        .anime-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background: var(--bg-secondary);
+        }
+
+        .anime-info {
+            padding: 1.25rem;
+        }
+
+        .anime-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .anime-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .anime-score {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-cyan);
+        }
+
+        .anime-members {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .activity-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-badge.high {
+            background: rgba(255, 45, 117, 0.2);
+            color: var(--accent-pink);
+        }
+
+        .activity-badge.medium {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+        }
+
+        .activity-badge.low {
+            background: rgba(0, 240, 255, 0.2);
+            color: var(--accent-cyan);
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-card);
+            border-top-color: var(--accent-pink);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    
+    <div class="container">
+        <header>
+            <h1 class="logo">WEEBCAST</h1>
+            <p class="tagline">Real-time Anime Activity Monitor</p>
+        </header>
+
+        <main id="app">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading activity data...</p>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by <a href="https://myanimelist.net" target="_blank">MyAnimeList</a> data via Kubernetes Operator</p>
+        </footer>
+    </div>
+
+    <script>
+        // Auto-detect local development
+        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:8787'
+            : 'https://api.weebcast.com';
+
+        const ACTIVITY_EMOJI = {
+            'Critical': '🔥',
+            'High': '⚡',
+            'Medium': '📈',
+            'Low': '💤'
+        };
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'Never';
+            const date = new Date(dateStr);
+            return date.toLocaleString();
+        }
+
+        function renderApp(data) {
+            const level = data.activityLevel || 'Low';
+            const levelClass = level.toLowerCase();
+            
+            document.getElementById('app').innerHTML = `
+                <div class="status-card ${levelClass}">
+                    <div class="status-header">
+                        <div class="activity-level">
+                            <div class="level-indicator">${ACTIVITY_EMOJI[level] || '📊'}</div>
+                            <div class="level-text">
+                                <h2>${level} Activity</h2>
+                                <p>MyAnimeList Status</p>
+                            </div>
+                        </div>
+                        <div class="last-updated">
+                            Updated: ${formatDate(data.lastUpdated)}
+                        </div>
+                    </div>
+                    <p class="weebcast-status">${data.weebcastStatus || 'Monitoring anime activity...'}</p>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">${formatNumber(data.metrics?.members || 0)}</div>
+                        <div class="metric-label">Total Members</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${formatNumber(data.metrics?.activeUsers || 0)}</div>
+                        <div class="metric-label">Active Users</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${(data.metrics?.score || 0).toFixed(1)}</div>
+                        <div class="metric-label">Avg Score</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${formatNumber(data.metrics?.favorites || 0)}</div>
+                        <div class="metric-label">Favorites</div>
+                    </div>
+                </div>
+
+                ${data.trendingAnime?.length ? `
+                    <section class="trending-section">
+                        <h3 class="section-title">Trending Now</h3>
+                        <div class="trending-grid">
+                            ${data.trendingAnime.slice(0, 8).map(anime => `
+                                <div class="anime-card">
+                                    <img class="anime-image" src="${anime.imageUrl || ''}" alt="${anime.title}" loading="lazy" onerror="this.style.display='none'">
+                                    <div class="anime-info">
+                                        <h4 class="anime-title">${anime.title}</h4>
+                                        <div class="anime-stats">
+                                            <span class="anime-score">★ ${(anime.score || 0).toFixed(1)}</span>
+                                            <span class="anime-members">${formatNumber(anime.members || 0)} members</span>
+                                        </div>
+                                        <span class="activity-badge ${(anime.activityLevel || 'low').toLowerCase()}">${anime.activityLevel || 'Low'}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+                ` : ''}
+            `;
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/activity`);
+                const data = await response.json();
+                renderApp(data);
+            } catch (error) {
+                console.error('Failed to fetch data:', error);
+                // Show demo data for development
+                renderApp({
+                    activityLevel: 'High',
+                    weebcastStatus: '⚡ HIGH - Elevated Weebcast activity expected. Popular anime trending.',
+                    metrics: {
+                        members: 15420000,
+                        activeUsers: 234500,
+                        score: 8.42,
+                        favorites: 89000
+                    },
+                    trendingAnime: [
+                        { id: 1, title: 'Solo Leveling', score: 8.7, members: 520000, activityLevel: 'High', imageUrl: '' },
+                        { id: 2, title: 'Frieren', score: 9.1, members: 480000, activityLevel: 'High', imageUrl: '' },
+                    ],
+                    lastUpdated: new Date().toISOString()
+                });
+            }
+        }
+
+        // Initial load
+        fetchData();
+
+        // Auto-refresh every 5 minutes
+        setInterval(fetchData, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
+
+
