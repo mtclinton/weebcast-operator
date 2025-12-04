@@ -123,6 +123,15 @@ dev-frontend: ## Run only the frontend locally.
 	@echo "Frontend available at http://localhost:8000"
 	cd website/frontend && python3 -m http.server 8000
 
+.PHONY: sync
+sync: ## Sync K8s AnimeMonitor data to local API worker.
+	@./scripts/sync-to-local.sh
+
+.PHONY: dev-watch
+dev-watch: ## Run sync in a loop (every 30s) to keep local API updated.
+	@echo "Watching for changes and syncing every 30s..."
+	@while true; do ./scripts/sync-to-local.sh; sleep 30; done
+
 ##@ Utilities
 
 .PHONY: mod-tidy

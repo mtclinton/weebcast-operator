@@ -8,7 +8,7 @@ export default {
     // CORS headers
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     };
 
@@ -34,13 +34,19 @@ export default {
       return handleGetTrending(env, corsHeaders);
     }
 
+    // POST endpoint for syncing data (local development / operator webhook)
+    if (url.pathname === '/api/sync' && request.method === 'POST') {
+      return handleSync(request, env, corsHeaders);
+    }
+
     return new Response(JSON.stringify({ 
       error: 'Not found',
       endpoints: [
         '/api/activity - Overall MAL activity',
         '/api/activity/all - All monitors',
         '/api/anime/:id - Specific anime activity',
-        '/api/trending - Trending anime list'
+        '/api/trending - Trending anime list',
+        'POST /api/sync - Sync data from operator (dev)'
       ]
     }), {
       status: 404,
@@ -130,6 +136,35 @@ async function handleGetTrending(env, corsHeaders) {
     }
 
     return new Response(JSON.stringify({ trending: data.trendingAnime }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Handle sync from operator (for local development)
+async function handleSync(request, env, corsHeaders) {
+  try {
+    const payload = await request.json();
+    const key = payload.key || 'mal-overall';
+    
+    // Store the activity data
+    await env.WEEBCAST_KV.put(key, JSON.stringify({
+      monitorName: payload.monitorName,
+      animeId: payload.animeId,
+      animeName: payload.animeName,
+      activityLevel: payload.activityLevel,
+      weebcastStatus: payload.weebcastStatus,
+      metrics: payload.metrics,
+      trendingAnime: payload.trendingAnime,
+      lastUpdated: payload.lastUpdated || new Date().toISOString()
+    }));
+
+    return new Response(JSON.stringify({ success: true, key }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (error) {
