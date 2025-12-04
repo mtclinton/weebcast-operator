@@ -1,0 +1,195 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: animemonitors.weebcast.com
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+spec:
+  group: weebcast.com
+  names:
+    kind: AnimeMonitor
+    listKind: AnimeMonitorList
+    plural: animemonitors
+    singular: animemonitor
+    shortNames:
+      - am
+      - anime
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Activity
+          type: string
+          jsonPath: .status.activityLevel
+          description: Current activity level
+        - name: Weebcast
+          type: string
+          jsonPath: .status.weebcastStatus
+          description: Weebcast status
+          priority: 1
+        - name: Score
+          type: number
+          jsonPath: .status.metrics.score
+          description: MAL Score
+        - name: Members
+          type: integer
+          jsonPath: .status.metrics.members
+          description: Member count
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+          description: Current phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: AnimeMonitor is the Schema for monitoring MyAnimeList activity for weebcast.com
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              description: AnimeMonitorSpec defines the desired state of AnimeMonitor
+              properties:
+                animeId:
+                  type: integer
+                  description: MyAnimeList ID of a specific anime to monitor (optional - if not set, monitors overall activity)
+                animeName:
+                  type: string
+                  description: Name of the anime being monitored (for display purposes)
+                pollingIntervalSeconds:
+                  type: integer
+                  default: 300
+                  minimum: 60
+                  description: How often to check MAL activity (minimum 60 seconds)
+                highActivityThreshold:
+                  type: integer
+                  default: 1000
+                  description: Threshold for "high" activity level
+                mediumActivityThreshold:
+                  type: integer
+                  default: 500
+                  description: Threshold for "medium" activity level
+                notifyOnHighActivity:
+                  type: boolean
+                  default: false
+                  description: Enable notifications when activity is high
+                webhookUrl:
+                  type: string
+                  description: Webhook URL for sending activity notifications
+            status:
+              type: object
+              description: AnimeMonitorStatus defines the observed state of AnimeMonitor
+              properties:
+                phase:
+                  type: string
+                  default: Initializing
+                  description: Current phase of the monitor
+                activityLevel:
+                  type: string
+                  enum: [Low, Medium, High, Critical]
+                  description: Current activity level
+                weebcastStatus:
+                  type: string
+                  description: Derived status for weebcast.com based on MAL activity
+                metrics:
+                  type: object
+                  description: Detailed activity metrics
+                  properties:
+                    activeUsers:
+                      type: integer
+                      description: Estimated number of active users
+                    watchingCount:
+                      type: integer
+                      description: Number of users currently watching
+                    completedCount:
+                      type: integer
+                      description: Number of users who completed
+                    droppedCount:
+                      type: integer
+                      description: Number of users who dropped
+                    planToWatchCount:
+                      type: integer
+                      description: Number of users planning to watch
+                    score:
+                      type: number
+                      description: Current MAL score
+                    scoredByCount:
+                      type: integer
+                      description: Number of users who scored
+                    rank:
+                      type: integer
+                      description: Current popularity rank
+                    popularity:
+                      type: integer
+                      description: Popularity score
+                    members:
+                      type: integer
+                      description: Total member count
+                    favorites:
+                      type: integer
+                      description: Favorites count
+                trendingAnime:
+                  type: array
+                  description: Currently trending anime on MAL
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: MAL anime ID
+                      title:
+                        type: string
+                        description: Anime title
+                      score:
+                        type: number
+                        description: Current score
+                      members:
+                        type: integer
+                        description: Member count
+                      activityLevel:
+                        type: string
+                        enum: [Low, Medium, High, Critical]
+                        description: Activity level for this anime
+                      imageUrl:
+                        type: string
+                        description: Cover image URL
+                lastChecked:
+                  type: string
+                  format: date-time
+                  description: Timestamp of the last activity check
+                lastActivityChange:
+                  type: string
+                  format: date-time
+                  description: When the activity level last changed
+                message:
+                  type: string
+                  description: Additional context about the current status
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+

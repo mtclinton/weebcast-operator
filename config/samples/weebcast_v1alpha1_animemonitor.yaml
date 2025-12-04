@@ -1,0 +1,54 @@
+---
+# Example: Monitor overall MyAnimeList activity
+apiVersion: weebcast.com/v1alpha1
+kind: AnimeMonitor
+metadata:
+  name: mal-overall-activity
+  namespace: default
+spec:
+  # No animeId = monitor overall MAL activity
+  pollingIntervalSeconds: 300  # Check every 5 minutes
+  highActivityThreshold: 1000
+  mediumActivityThreshold: 500
+  notifyOnHighActivity: true
+---
+# Example: Monitor a specific popular anime (Attack on Titan)
+apiVersion: weebcast.com/v1alpha1
+kind: AnimeMonitor
+metadata:
+  name: attack-on-titan-monitor
+  namespace: default
+spec:
+  animeId: 16498  # Attack on Titan MAL ID
+  animeName: "Shingeki no Kyojin"
+  pollingIntervalSeconds: 300
+  highActivityThreshold: 5000
+  mediumActivityThreshold: 2000
+---
+# Example: Monitor currently airing anime (Solo Leveling)
+apiVersion: weebcast.com/v1alpha1
+kind: AnimeMonitor
+metadata:
+  name: solo-leveling-monitor
+  namespace: default
+spec:
+  animeId: 52299  # Solo Leveling MAL ID
+  animeName: "Ore dake Level Up na Ken"
+  pollingIntervalSeconds: 180  # Check more frequently for airing anime
+  highActivityThreshold: 3000
+  mediumActivityThreshold: 1500
+  notifyOnHighActivity: true
+---
+# Example: Monitor a classic anime (Death Note)
+apiVersion: weebcast.com/v1alpha1
+kind: AnimeMonitor
+metadata:
+  name: death-note-monitor
+  namespace: default
+spec:
+  animeId: 1535  # Death Note MAL ID
+  animeName: "Death Note"
+  pollingIntervalSeconds: 600  # Less frequent for older anime
+  highActivityThreshold: 1000
+  mediumActivityThreshold: 500
+

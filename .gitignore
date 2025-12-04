@@ -1,0 +1,58 @@
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of go coverage
+*.out
+cover.out
+
+# Go workspace
+go.work
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Debug files
+debug
+*.log
+
+# Dependency directories
+vendor/
+
+# Build artifacts
+dist/
+
+# Docker
+.docker/
+
+# Kubernetes config (local)
+kubeconfig
+*.kubeconfig
+
+# Helm
+charts/*.tgz
+
+# Environment files
+.env
+.env.local
+.envrc
+
+# Temporary files
+tmp/
+temp/
+
