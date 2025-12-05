@@ -3,22 +3,26 @@
 
 API_URL="${API_URL:-http://localhost:8787}"
 
-echo "Syncing AnimeMonitor data to $API_URL..."
+echo "🌀 Syncing Weeb Weather Data to $API_URL..."
+echo ""
 
 # Get all AnimeMonitors as JSON
 monitors=$(kubectl get animemonitors -A -o json)
 
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to get AnimeMonitors from Kubernetes"
+    echo "❌ Error: Failed to get AnimeMonitors from Kubernetes"
     exit 1
 fi
 
 # Process each monitor
 echo "$monitors" | jq -c '.items[]' | while read -r item; do
     name=$(echo "$item" | jq -r '.metadata.name')
+    activity=$(echo "$item" | jq -r '.status.activityLevel // "Unknown"')
     
     # Determine the key for storage
     anime_id=$(echo "$item" | jq -r '.spec.animeId // empty')
+    anime_name=$(echo "$item" | jq -r '.spec.animeName // empty')
+    
     if [ -n "$anime_id" ] && [ "$anime_id" != "null" ] && [ "$anime_id" != "0" ]; then
         key="anime-$anime_id"
     elif [[ "$name" == *"overall"* ]]; then
@@ -27,12 +31,22 @@ echo "$monitors" | jq -c '.items[]' | while read -r item; do
         key="$name"
     fi
     
+    # Build the payload - extract animeName from weebcastStatus if not in spec
+    # The controller puts [AnimeName] at the start of the status message
+    if [ -z "$anime_name" ] || [ "$anime_name" == "null" ]; then
+        # Try to extract from status message like "[Shingeki no Kyojin] ⛈️ STORM..."
+        extracted=$(echo "$item" | jq -r '.status.weebcastStatus // ""' | sed -n 's/^\[\([^]]*\)\].*/\1/p')
+        if [ -n "$extracted" ]; then
+            anime_name="$extracted"
+        fi
+    fi
+    
     # Build the payload
-    payload=$(echo "$item" | jq --arg key "$key" '{
+    payload=$(echo "$item" | jq --arg key "$key" --arg animeName "$anime_name" '{
         key: $key,
         monitorName: .metadata.name,
         animeId: (.spec.animeId // null),
-        animeName: (.spec.animeName // null),
+        animeName: (if $animeName != "" and $animeName != "null" then $animeName else null end),
         activityLevel: .status.activityLevel,
         weebcastStatus: .status.weebcastStatus,
         metrics: {
@@ -52,13 +66,23 @@ echo "$monitors" | jq -c '.items[]' | while read -r item; do
         -H "Content-Type: application/json" \
         -d "$payload")
     
+    # Weather icon based on activity
+    case "$activity" in
+        "Critical") icon="🌀" ;;
+        "High") icon="⛈️" ;;
+        "Medium") icon="⛅" ;;
+        "Low") icon="☀️" ;;
+        *) icon="❓" ;;
+    esac
+    
     if echo "$response" | jq -e '.success' > /dev/null 2>&1; then
-        echo "✓ Synced: $name -> $key"
+        display_name="${anime_name:-$name}"
+        echo "$icon $display_name → $activity"
     else
-        echo "✗ Failed to sync $name: $response"
+        echo "❌ Failed: $name - $response"
     fi
 done
 
 echo ""
-echo "Done! View the dashboard at http://localhost:8000"
+echo "✅ Sync complete! View the forecast at http://localhost:8000"
 
