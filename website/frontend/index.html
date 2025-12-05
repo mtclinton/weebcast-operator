@@ -426,6 +426,120 @@
             50% { opacity: 0.6; }
         }
 
+        /* Regional Forecasts Grid */
+        .regional-section {
+            margin-top: 3rem;
+        }
+
+        .regional-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .regional-card {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .regional-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .regional-card.clear::before { background: var(--clear-sky); }
+        .regional-card.cloudy::before { background: var(--cloudy); }
+        .regional-card.stormy::before { background: var(--stormy); }
+        .regional-card.typhoon::before { background: var(--typhoon); animation: pulse 1s infinite; }
+
+        .regional-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(240, 98, 146, 0.2);
+        }
+
+        .regional-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .regional-icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 0 10px currentColor);
+        }
+
+        .regional-icon.clear { color: var(--clear-sky); }
+        .regional-icon.cloudy { color: var(--cloudy); }
+        .regional-icon.stormy { color: var(--stormy); }
+        .regional-icon.typhoon { color: var(--typhoon); animation: spin-pulse 2s infinite; }
+
+        .regional-title {
+            flex: 1;
+        }
+
+        .regional-title h3 {
+            font-family: 'Dela Gothic One', cursive;
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .regional-title .condition {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .regional-title .condition.clear { color: var(--clear-sky); }
+        .regional-title .condition.cloudy { color: var(--cloudy); }
+        .regional-title .condition.stormy { color: var(--stormy); }
+        .regional-title .condition.typhoon { color: var(--typhoon); }
+
+        .regional-forecast {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .regional-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .regional-stat {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .regional-stat .value {
+            font-family: 'Space Mono', monospace;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .regional-stat .label {
+            color: var(--text-secondary);
+            margin-left: 0.25rem;
+        }
+
         /* Loading state */
         .loading {
             text-align: center;
@@ -684,11 +798,80 @@
             `;
         }
 
+        function renderRegionalForecasts(monitors) {
+            // Filter out the overall monitor (shown as main card) and sort by activity
+            const regionalMonitors = monitors
+                .filter(m => m.animeName || m.animeId)
+                .sort((a, b) => {
+                    const order = { 'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3 };
+                    return (order[a.activityLevel] || 3) - (order[b.activityLevel] || 3);
+                });
+
+            if (regionalMonitors.length === 0) return '';
+
+            return `
+                <section class="regional-section">
+                    <h3 class="section-title"><span>🗺️</span> Regional Forecasts (Tracked Anime)</h3>
+                    <div class="regional-grid">
+                        ${regionalMonitors.map(monitor => {
+                            const weather = WEATHER_DATA[monitor.activityLevel] || WEATHER_DATA['Low'];
+                            const title = monitor.animeName || `Anime #${monitor.animeId}`;
+                            return `
+                                <div class="regional-card ${weather.class}">
+                                    <div class="regional-header">
+                                        <div class="regional-icon ${weather.class}">${weather.icon}</div>
+                                        <div class="regional-title">
+                                            <h3>${title}</h3>
+                                            <div class="condition ${weather.class}">${weather.title}</div>
+                                        </div>
+                                    </div>
+                                    <p class="regional-forecast">${monitor.weebcastStatus || 'Monitoring...'}</p>
+                                    <div class="regional-stats">
+                                        <div class="regional-stat">
+                                            <span class="value">★ ${(monitor.metrics?.score || 0).toFixed(1)}</span>
+                                            <span class="label">score</span>
+                                        </div>
+                                        <div class="regional-stat">
+                                            <span class="value">${formatNumber(monitor.metrics?.members || 0)}</span>
+                                            <span class="label">weebs</span>
+                                        </div>
+                                        <div class="regional-stat">
+                                            <span class="value">${formatNumber(monitor.metrics?.watchingCount || 0)}</span>
+                                            <span class="label">watching</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </section>
+            `;
+        }
+
         async function fetchData() {
             try {
-                const response = await fetch(`${API_BASE}/api/activity`);
-                const data = await response.json();
-                renderApp(data);
+                // Fetch all monitors
+                const allResponse = await fetch(`${API_BASE}/api/activity/all`);
+                const allData = await allResponse.json();
+                const monitors = allData.monitors || [];
+
+                // Find the overall monitor for the main display
+                const overall = monitors.find(m => !m.animeId && !m.animeName) || monitors[0];
+                
+                if (overall) {
+                    renderApp(overall);
+                    
+                    // Append regional forecasts if we have specific anime monitors
+                    const regionalHTML = renderRegionalForecasts(monitors);
+                    if (regionalHTML) {
+                        document.getElementById('app').innerHTML += regionalHTML;
+                    }
+                } else {
+                    // Fallback to single endpoint
+                    const response = await fetch(`${API_BASE}/api/activity`);
+                    const data = await response.json();
+                    renderApp(data);
+                }
             } catch (error) {
                 console.error('Failed to fetch data:', error);
                 // Show demo data for development
@@ -704,11 +887,17 @@
                     trendingAnime: [
                         { id: 1, title: 'Solo Leveling', score: 8.7, members: 520000, activityLevel: 'High', imageUrl: '' },
                         { id: 2, title: 'Frieren: Beyond Journey\'s End', score: 9.1, members: 480000, activityLevel: 'Critical', imageUrl: '' },
-                        { id: 3, title: 'Jujutsu Kaisen', score: 8.6, members: 450000, activityLevel: 'High', imageUrl: '' },
-                        { id: 4, title: 'Demon Slayer', score: 8.5, members: 420000, activityLevel: 'Medium', imageUrl: '' },
                     ],
                     lastUpdated: new Date().toISOString()
                 });
+                
+                // Demo regional forecasts
+                const demoRegional = renderRegionalForecasts([
+                    { animeName: 'Attack on Titan', activityLevel: 'High', weebcastStatus: '⛈️ STORM WARNING! Heavy titan activity detected!', metrics: { score: 8.5, members: 4200000, watchingCount: 120000 } },
+                    { animeName: 'Death Note', activityLevel: 'Critical', weebcastStatus: '🌀 TYPHOON ALERT! Keikaku doori energy off the charts!', metrics: { score: 8.6, members: 4100000, watchingCount: 95000 } },
+                    { animeName: 'Solo Leveling', activityLevel: 'Medium', weebcastStatus: '⛅ Moderate activity. Sung Jin-Woo fans gathering...', metrics: { score: 8.2, members: 1000000, watchingCount: 250000 } },
+                ]);
+                document.getElementById('app').innerHTML += demoRegional;
             }
         }
 
