@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weebcast - Anime Activity Monitor</title>
+    <title>WEEBCAST ⛈️ Anime Weather Forecast</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-card: #1a1a25;
-            --accent-pink: #ff2d75;
-            --accent-cyan: #00f0ff;
-            --accent-purple: #b14eff;
-            --text-primary: #ffffff;
-            --text-secondary: #8a8a9a;
-            --gradient-hot: linear-gradient(135deg, #ff2d75, #ff6b35);
-            --gradient-cool: linear-gradient(135deg, #00f0ff, #b14eff);
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-card: #21262d;
+            --clear-sky: #4fc3f7;
+            --cloudy: #ffb74d;
+            --stormy: #f06292;
+            --typhoon: #ff1744;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
         }
 
         * {
@@ -27,30 +26,78 @@
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Zen Maru Gothic', sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* Animated background */
-        .bg-pattern {
+        /* Animated weather background */
+        .weather-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(255, 45, 117, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(0, 240, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(177, 78, 255, 0.05) 0%, transparent 70%);
             pointer-events: none;
             z-index: 0;
+            overflow: hidden;
+        }
+
+        .weather-bg.clear {
+            background: linear-gradient(180deg, #1a237e 0%, #4fc3f7 50%, #81d4fa 100%);
+        }
+
+        .weather-bg.cloudy {
+            background: linear-gradient(180deg, #37474f 0%, #78909c 50%, #ffb74d 100%);
+        }
+
+        .weather-bg.stormy {
+            background: linear-gradient(180deg, #1a1a2e 0%, #4a148c 50%, #f06292 100%);
+            animation: lightning 4s infinite;
+        }
+
+        .weather-bg.typhoon {
+            background: linear-gradient(180deg, #0d0d0d 0%, #b71c1c 50%, #ff1744 100%);
+            animation: pulse-bg 1s infinite;
+        }
+
+        @keyframes lightning {
+            0%, 95%, 100% { opacity: 1; }
+            96% { opacity: 0.3; }
+            97% { opacity: 1; }
+            98% { opacity: 0.5; }
+        }
+
+        @keyframes pulse-bg {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+
+        /* Floating particles */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float-up 8s infinite linear;
+        }
+
+        @keyframes float-up {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
             position: relative;
@@ -60,159 +107,206 @@
         /* Header */
         header {
             text-align: center;
-            padding: 3rem 0;
+            padding: 2rem 0;
         }
 
         .logo {
-            font-size: 4rem;
-            font-weight: 800;
-            background: var(--gradient-hot);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -2px;
+            font-family: 'Dela Gothic One', cursive;
+            font-size: 4.5rem;
+            color: white;
+            text-shadow: 
+                0 0 20px rgba(255, 255, 255, 0.5),
+                4px 4px 0 #ff1744,
+                8px 8px 0 rgba(0, 0, 0, 0.3);
+            letter-spacing: 4px;
             margin-bottom: 0.5rem;
         }
 
         .tagline {
             font-family: 'Space Mono', monospace;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            letter-spacing: 3px;
             text-transform: uppercase;
         }
 
-        /* Activity Status Card */
-        .status-card {
-            background: var(--bg-card);
-            border-radius: 24px;
+        .jp-text {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 0.5rem;
+        }
+
+        /* Main Weather Card */
+        .forecast-card {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
             padding: 3rem;
             margin: 2rem 0;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             position: relative;
             overflow: hidden;
         }
 
-        .status-card::before {
+        .forecast-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--gradient-hot);
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.1), transparent 30%);
+            animation: rotate-border 10s linear infinite;
         }
 
-        .status-card.high::before {
-            background: var(--gradient-hot);
-            animation: pulse-glow 2s ease-in-out infinite;
+        @keyframes rotate-border {
+            to { transform: rotate(360deg); }
         }
 
-        .status-card.medium::before {
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
+        .forecast-content {
+            position: relative;
+            z-index: 1;
         }
 
-        .status-card.low::before {
-            background: var(--gradient-cool);
-        }
-
-        @keyframes pulse-glow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .status-header {
+        .weather-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 2rem;
             margin-bottom: 2rem;
         }
 
-        .activity-level {
+        .weather-main {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 2rem;
         }
 
-        .level-indicator {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            background: var(--bg-secondary);
-            border: 3px solid var(--accent-pink);
-            animation: float 3s ease-in-out infinite;
+        .weather-icon {
+            font-size: 8rem;
+            animation: bounce 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px currentColor);
         }
 
-        @keyframes float {
+        .weather-icon.clear { color: var(--clear-sky); }
+        .weather-icon.cloudy { color: var(--cloudy); }
+        .weather-icon.stormy { color: var(--stormy); animation: shake 0.5s infinite; }
+        .weather-icon.typhoon { color: var(--typhoon); animation: spin-pulse 1s infinite; }
+
+        @keyframes bounce {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-15px); }
         }
 
-        .level-text h2 {
-            font-size: 2rem;
-            font-weight: 800;
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(0); }
+            25% { transform: translateX(-5px) rotate(-5deg); }
+            75% { transform: translateX(5px) rotate(5deg); }
+        }
+
+        @keyframes spin-pulse {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .weather-info h2 {
+            font-family: 'Dela Gothic One', cursive;
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
             text-transform: uppercase;
         }
 
-        .level-text p {
+        .weather-info h2.clear { color: var(--clear-sky); }
+        .weather-info h2.cloudy { color: var(--cloudy); }
+        .weather-info h2.stormy { color: var(--stormy); }
+        .weather-info h2.typhoon { color: var(--typhoon); text-shadow: 0 0 20px var(--typhoon); }
+
+        .weather-subtitle {
+            font-size: 1.1rem;
             color: var(--text-secondary);
+        }
+
+        .broadcast-time {
             font-family: 'Space Mono', monospace;
-            font-size: 0.85rem;
-        }
-
-        .last-updated {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            background: var(--bg-secondary);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-        }
-
-        .weebcast-status {
-            font-size: 1.5rem;
-            line-height: 1.6;
-            color: var(--text-secondary);
-        }
-
-        /* Metrics Grid */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin: 3rem 0;
-        }
-
-        .metric-card {
-            background: var(--bg-secondary);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
             border-radius: 16px;
+            text-align: right;
+        }
+
+        .broadcast-time .label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .broadcast-time .time {
+            font-size: 1.1rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Forecast Message */
+        .forecast-message {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-left: 4px solid var(--stormy);
+        }
+
+        .forecast-message p {
+            font-size: 1.4rem;
+            line-height: 1.8;
+        }
+
+        .forecast-message .announcer {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+            font-style: italic;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
             padding: 1.5rem;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            transition: transform 0.3s, border-color 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s, background 0.3s;
         }
 
-        .metric-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent-cyan);
+        .stat-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        .metric-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: var(--gradient-cool);
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-family: 'Dela Gothic One', cursive;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #4fc3f7, #f06292);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .metric-label {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.75rem;
+        .stat-label {
+            font-size: 0.8rem;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -225,46 +319,42 @@
         }
 
         .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-family: 'Dela Gothic One', cursive;
+            font-size: 1.8rem;
             margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 1rem;
         }
 
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 24px;
-            background: var(--gradient-hot);
-            border-radius: 2px;
+        .section-title span {
+            font-size: 2rem;
         }
 
         .trending-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 1.5rem;
         }
 
         .anime-card {
-            background: var(--bg-card);
-            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             transition: transform 0.3s, box-shadow 0.3s;
         }
 
         .anime-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(255, 45, 117, 0.15);
+            transform: translateY(-10px) rotate(1deg);
+            box-shadow: 0 20px 40px rgba(240, 98, 146, 0.3);
         }
 
         .anime-image {
             width: 100%;
-            height: 160px;
+            height: 150px;
             object-fit: cover;
-            background: var(--bg-secondary);
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-card));
         }
 
         .anime-info {
@@ -272,7 +362,7 @@
         }
 
         .anime-title {
-            font-weight: 600;
+            font-weight: 700;
             font-size: 1rem;
             margin-bottom: 0.75rem;
             white-space: nowrap;
@@ -284,6 +374,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 0.75rem;
         }
 
         .anime-score {
@@ -291,7 +382,7 @@
             align-items: center;
             gap: 0.25rem;
             font-family: 'Space Mono', monospace;
-            color: var(--accent-cyan);
+            color: #ffd700;
         }
 
         .anime-members {
@@ -299,50 +390,72 @@
             color: var(--text-secondary);
         }
 
-        .activity-badge {
+        .weather-badge {
             display: inline-block;
-            padding: 0.25rem 0.75rem;
+            padding: 0.35rem 0.85rem;
             border-radius: 20px;
             font-size: 0.7rem;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .activity-badge.high {
-            background: rgba(255, 45, 117, 0.2);
-            color: var(--accent-pink);
+        .weather-badge.clear {
+            background: rgba(79, 195, 247, 0.2);
+            color: var(--clear-sky);
         }
 
-        .activity-badge.medium {
-            background: rgba(255, 215, 0, 0.2);
-            color: #ffd700;
+        .weather-badge.cloudy {
+            background: rgba(255, 183, 77, 0.2);
+            color: var(--cloudy);
         }
 
-        .activity-badge.low {
-            background: rgba(0, 240, 255, 0.2);
-            color: var(--accent-cyan);
+        .weather-badge.stormy {
+            background: rgba(240, 98, 146, 0.2);
+            color: var(--stormy);
+        }
+
+        .weather-badge.typhoon {
+            background: rgba(255, 23, 68, 0.3);
+            color: var(--typhoon);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
 
         /* Loading state */
         .loading {
             text-align: center;
-            padding: 4rem;
+            padding: 6rem;
             color: var(--text-secondary);
         }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--bg-card);
-            border-top-color: var(--accent-pink);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
+        .loading-icon {
+            font-size: 4rem;
+            animation: spin-pulse 2s infinite;
+            margin-bottom: 1rem;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        /* Alert Banner */
+        .alert-banner {
+            background: linear-gradient(90deg, var(--typhoon), #ff6b6b, var(--typhoon));
+            background-size: 200% 100%;
+            animation: gradient-shift 2s linear infinite;
+            color: white;
+            text-align: center;
+            padding: 0.75rem;
+            font-family: 'Dela Gothic One', cursive;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
         }
 
         /* Footer */
@@ -354,29 +467,46 @@
         }
 
         footer a {
-            color: var(--accent-cyan);
+            color: var(--stormy);
             text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo { font-size: 2.5rem; }
+            .weather-icon { font-size: 5rem; }
+            .weather-info h2 { font-size: 2rem; }
+            .weather-header { flex-direction: column; align-items: center; text-align: center; }
+            .weather-main { flex-direction: column; }
+            .broadcast-time { text-align: center; }
         }
     </style>
 </head>
 <body>
-    <div class="bg-pattern"></div>
+    <div class="weather-bg clear" id="weather-bg">
+        <div class="particles" id="particles"></div>
+    </div>
+    
+    <div id="alert-container"></div>
     
     <div class="container">
         <header>
             <h1 class="logo">WEEBCAST</h1>
-            <p class="tagline">Real-time Anime Activity Monitor</p>
+            <p class="tagline">🎌 Your Anime Weather Forecast 🎌</p>
+            <p class="jp-text">アニメ活動予報 ～ 今日のオタク天気 ～</p>
         </header>
 
         <main id="app">
             <div class="loading">
-                <div class="spinner"></div>
-                <p>Loading activity data...</p>
+                <div class="loading-icon">🌀</div>
+                <p>Scanning the weeb-o-sphere...</p>
+                <p class="jp-text">データを読み込み中...</p>
             </div>
         </main>
 
         <footer>
-            <p>Powered by <a href="https://myanimelist.net" target="_blank">MyAnimeList</a> data via Kubernetes Operator</p>
+            <p>Powered by <a href="https://myanimelist.net" target="_blank">MyAnimeList</a> atmospheric data</p>
+            <p class="jp-text" style="margin-top: 0.5rem;">信じて。計画通り。</p>
         </footer>
     </div>
 
@@ -386,82 +516,168 @@
             ? 'http://localhost:8787'
             : 'https://api.weebcast.com';
 
-        const ACTIVITY_EMOJI = {
-            'Critical': '🔥',
-            'High': '⚡',
-            'Medium': '📈',
-            'Low': '💤'
+        // Weather mapping
+        const WEATHER_DATA = {
+            'Low': {
+                icon: '☀️',
+                class: 'clear',
+                title: 'Clear Skies',
+                titleJp: '晴れ',
+                subtitle: 'Peaceful day in the weeb-o-sphere'
+            },
+            'Medium': {
+                icon: '⛅',
+                class: 'cloudy',
+                title: 'Cloudy',
+                titleJp: '曇り',
+                subtitle: 'Activity brewing on the horizon'
+            },
+            'High': {
+                icon: '⛈️',
+                class: 'stormy',
+                title: 'STORM WARNING',
+                titleJp: '嵐警報',
+                subtitle: 'Heavy weeb traffic incoming!'
+            },
+            'Critical': {
+                icon: '🌀',
+                class: 'typhoon',
+                title: 'TYPHOON ALERT',
+                titleJp: '台風警報',
+                subtitle: 'MAXIMUM WEEB ENERGY DETECTED'
+            }
+        };
+
+        const WEATHER_BADGES = {
+            'Low': { class: 'clear', text: '☀️ Clear' },
+            'Medium': { class: 'cloudy', text: '⛅ Cloudy' },
+            'High': { class: 'stormy', text: '⛈️ Stormy' },
+            'Critical': { class: 'typhoon', text: '🌀 TYPHOON' }
         };
 
         function formatNumber(num) {
             if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
             if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-            return num.toString();
+            return num?.toString() || '0';
         }
 
         function formatDate(dateStr) {
-            if (!dateStr) return 'Never';
+            if (!dateStr) return 'Scanning...';
             const date = new Date(dateStr);
-            return date.toLocaleString();
+            return date.toLocaleString('en-US', { 
+                weekday: 'short',
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+        }
+
+        function createParticles(weatherClass) {
+            const container = document.getElementById('particles');
+            container.innerHTML = '';
+            
+            const count = weatherClass === 'typhoon' ? 50 : weatherClass === 'stormy' ? 30 : 15;
+            
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.width = particle.style.height = (Math.random() * 10 + 5) + 'px';
+                particle.style.animationDelay = Math.random() * 8 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 6) + 's';
+                container.appendChild(particle);
+            }
         }
 
         function renderApp(data) {
             const level = data.activityLevel || 'Low';
-            const levelClass = level.toLowerCase();
+            const weather = WEATHER_DATA[level] || WEATHER_DATA['Low'];
+            
+            // Update background
+            const bg = document.getElementById('weather-bg');
+            bg.className = `weather-bg ${weather.class}`;
+            createParticles(weather.class);
+            
+            // Show alert banner for critical
+            const alertContainer = document.getElementById('alert-container');
+            if (level === 'Critical') {
+                alertContainer.innerHTML = `
+                    <div class="alert-banner">
+                        ⚠️ EXTREME WEEB WEATHER ALERT ⚠️ ALL WEEBS TAKE COVER ⚠️ THIS IS NOT A DRILL ⚠️
+                    </div>
+                `;
+            } else {
+                alertContainer.innerHTML = '';
+            }
             
             document.getElementById('app').innerHTML = `
-                <div class="status-card ${levelClass}">
-                    <div class="status-header">
-                        <div class="activity-level">
-                            <div class="level-indicator">${ACTIVITY_EMOJI[level] || '📊'}</div>
-                            <div class="level-text">
-                                <h2>${level} Activity</h2>
-                                <p>MyAnimeList Status</p>
+                <div class="forecast-card">
+                    <div class="forecast-content">
+                        <div class="weather-header">
+                            <div class="weather-main">
+                                <div class="weather-icon ${weather.class}">${weather.icon}</div>
+                                <div class="weather-info">
+                                    <h2 class="${weather.class}">${weather.title}</h2>
+                                    <p class="weather-subtitle">${weather.subtitle}</p>
+                                    <p class="jp-text" style="margin-top: 0.5rem; font-size: 1.2rem;">${weather.titleJp}</p>
+                                </div>
+                            </div>
+                            <div class="broadcast-time">
+                                <div class="label">Last Broadcast</div>
+                                <div class="time">${formatDate(data.lastUpdated)}</div>
                             </div>
                         </div>
-                        <div class="last-updated">
-                            Updated: ${formatDate(data.lastUpdated)}
-                        </div>
-                    </div>
-                    <p class="weebcast-status">${data.weebcastStatus || 'Monitoring anime activity...'}</p>
-                </div>
 
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-value">${formatNumber(data.metrics?.members || 0)}</div>
-                        <div class="metric-label">Total Members</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">${formatNumber(data.metrics?.activeUsers || 0)}</div>
-                        <div class="metric-label">Active Users</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">${(data.metrics?.score || 0).toFixed(1)}</div>
-                        <div class="metric-label">Avg Score</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">${formatNumber(data.metrics?.favorites || 0)}</div>
-                        <div class="metric-label">Favorites</div>
+                        <div class="forecast-message" style="border-left-color: var(--${weather.class});">
+                            <p>${data.weebcastStatus || 'Monitoring the weeb-o-sphere for anime activity...'}</p>
+                            <p class="announcer">— Your Weebcast Weather Reporter</p>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">👥</div>
+                                <div class="stat-value">${formatNumber(data.metrics?.members || 0)}</div>
+                                <div class="stat-label">Weebs Detected</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">🔥</div>
+                                <div class="stat-value">${formatNumber(data.metrics?.activeUsers || 0)}</div>
+                                <div class="stat-label">Currently Active</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">⭐</div>
+                                <div class="stat-value">${(data.metrics?.score || 0).toFixed(1)}</div>
+                                <div class="stat-label">Hype Index</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">💖</div>
+                                <div class="stat-value">${formatNumber(data.metrics?.favorites || 0)}</div>
+                                <div class="stat-label">Favorites</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 ${data.trendingAnime?.length ? `
                     <section class="trending-section">
-                        <h3 class="section-title">Trending Now</h3>
+                        <h3 class="section-title"><span>📡</span> Storm Fronts (Trending Anime)</h3>
                         <div class="trending-grid">
-                            ${data.trendingAnime.slice(0, 8).map(anime => `
-                                <div class="anime-card">
-                                    <img class="anime-image" src="${anime.imageUrl || ''}" alt="${anime.title}" loading="lazy" onerror="this.style.display='none'">
-                                    <div class="anime-info">
-                                        <h4 class="anime-title">${anime.title}</h4>
-                                        <div class="anime-stats">
-                                            <span class="anime-score">★ ${(anime.score || 0).toFixed(1)}</span>
-                                            <span class="anime-members">${formatNumber(anime.members || 0)} members</span>
+                            ${data.trendingAnime.slice(0, 8).map(anime => {
+                                const badge = WEATHER_BADGES[anime.activityLevel] || WEATHER_BADGES['Low'];
+                                return `
+                                    <div class="anime-card">
+                                        <img class="anime-image" src="${anime.imageUrl || ''}" alt="${anime.title}" loading="lazy" onerror="this.style.background='linear-gradient(135deg, #1a1a2e, #4a148c)'">
+                                        <div class="anime-info">
+                                            <h4 class="anime-title">${anime.title}</h4>
+                                            <div class="anime-stats">
+                                                <span class="anime-score">★ ${(anime.score || 0).toFixed(1)}</span>
+                                                <span class="anime-members">${formatNumber(anime.members || 0)} weebs</span>
+                                            </div>
+                                            <span class="weather-badge ${badge.class}">${badge.text}</span>
                                         </div>
-                                        <span class="activity-badge ${(anime.activityLevel || 'low').toLowerCase()}">${anime.activityLevel || 'Low'}</span>
                                     </div>
-                                </div>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </div>
                     </section>
                 ` : ''}
@@ -478,7 +694,7 @@
                 // Show demo data for development
                 renderApp({
                     activityLevel: 'High',
-                    weebcastStatus: '⚡ HIGH - Elevated Weebcast activity expected. Popular anime trending.',
+                    weebcastStatus: '⛈️ STORM WARNING! A massive weeb front is moving in from the east! Expect heavy anime discussions and possible waifu wars. Take shelter in your favorite streaming site!',
                     metrics: {
                         members: 15420000,
                         activeUsers: 234500,
@@ -487,7 +703,9 @@
                     },
                     trendingAnime: [
                         { id: 1, title: 'Solo Leveling', score: 8.7, members: 520000, activityLevel: 'High', imageUrl: '' },
-                        { id: 2, title: 'Frieren', score: 9.1, members: 480000, activityLevel: 'High', imageUrl: '' },
+                        { id: 2, title: 'Frieren: Beyond Journey\'s End', score: 9.1, members: 480000, activityLevel: 'Critical', imageUrl: '' },
+                        { id: 3, title: 'Jujutsu Kaisen', score: 8.6, members: 450000, activityLevel: 'High', imageUrl: '' },
+                        { id: 4, title: 'Demon Slayer', score: 8.5, members: 420000, activityLevel: 'Medium', imageUrl: '' },
                     ],
                     lastUpdated: new Date().toISOString()
                 });
@@ -499,8 +717,9 @@
 
         // Auto-refresh every 5 minutes
         setInterval(fetchData, 5 * 60 * 1000);
+
+        // Initialize particles
+        createParticles('clear');
     </script>
 </body>
 </html>
-
-
