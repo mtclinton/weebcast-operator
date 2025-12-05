@@ -1,20 +1,20 @@
-# 🎌 Weebcast Operator
+# 🌀 Weebcast Operator
 
-A Kubernetes operator for [weebcast.com](https://weebcast.com) that monitors MyAnimeList (MAL) activity to predict and track anime-related traffic patterns.
+A Kubernetes operator for [weebcast.com](https://weebcast.com) - your anime weather forecast! Monitors MyAnimeList (MAL) activity to predict weeb storms and traffic patterns.
 
 ## Overview
 
-The Weebcast Operator watches MyAnimeList activity levels and translates them into actionable insights for weebcast.com. When anime activity is high on MAL (new episode releases, trending shows, seasonal premieres), this typically correlates with increased traffic on anime-related sites.
+The Weebcast Operator scans the weeb-o-sphere and translates MyAnimeList activity into weather forecasts for anime traffic. When a weeb storm is brewing (new episode releases, trending shows, seasonal premieres), we'll let you know before it makes landfall!
 
 ### Features
 
-- **📊 Overall MAL Activity Monitoring** - Track global anime community engagement
-- **🎯 Specific Anime Monitoring** - Monitor individual anime by MAL ID
-- **📈 Activity Level Tracking** - Low, Medium, High, and Critical activity levels
-- **🔥 Trending Anime Detection** - Identify currently trending shows
-- **⚡ Weebcast Status Derivation** - Automatic status messages for weebcast.com
-- **🔔 Configurable Thresholds** - Customize activity level boundaries
-- **📡 Webhook Notifications** - Get notified when activity is high
+- **🌡️ Weeb-o-sphere Scanning** - Track global anime community activity levels
+- **🎯 Storm Tracking** - Monitor individual anime by MAL ID  
+- **🌀 Weather Conditions** - Clear ☀️, Cloudy ⛅, Stormy ⛈️, and Typhoon 🌀 alerts
+- **📡 Trending Detection** - Identify incoming storm fronts (trending shows)
+- **📺 Broadcast Reports** - Automated weather forecast messages
+- **⚙️ Configurable Thresholds** - Customize sensitivity levels
+- **🔔 Storm Alerts** - Webhook notifications for severe weeb weather
 
 ## Installation
 
@@ -124,14 +124,14 @@ spec:
   notifyOnHighActivity: true
 ```
 
-## Activity Levels
+## Weeb Weather Forecast Levels
 
-| Level | Emoji | Description | Weebcast Impact |
-|-------|-------|-------------|-----------------|
-| **Low** | 💤 | Baseline activity | Normal traffic |
-| **Medium** | 📈 | Moderate interest | Steady traffic |
-| **High** | ⚡ | Popular anime trending | Elevated traffic |
-| **Critical** | 🔥 | Major anime event | Traffic surge |
+| Condition | Icon | Description | Weebcast Impact |
+|-----------|------|-------------|-----------------|
+| **Clear Skies** | ☀️ | Peaceful day in the weeb-o-sphere | Normal traffic, perfect for backlog |
+| **Cloudy** | ⛅ | Activity brewing on the horizon | Moderate traffic, stay alert |
+| **Storm Warning** | ⛈️ | Heavy weeb traffic incoming! | Elevated traffic, trending hashtags |
+| **Typhoon Alert** | 🌀 | MAXIMUM WEEB ENERGY DETECTED | Traffic surge, server strain expected |
 
 ## Usage
 
