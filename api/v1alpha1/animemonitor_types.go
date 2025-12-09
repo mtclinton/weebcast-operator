@@ -122,9 +122,17 @@ type AnimeMonitorStatus struct {
 	// Metrics contains detailed activity metrics
 	Metrics AnimeActivityMetrics `json:"metrics,omitempty"`
 
-	// TrendingAnime lists currently trending anime on MAL
+	// TrendingAnime lists currently trending anime on MAL (top airing by popularity)
 	// +optional
 	TrendingAnime []TrendingAnime `json:"trendingAnime,omitempty"`
+
+	// SeasonalAnime lists anime from the current season
+	// +optional
+	SeasonalAnime []TrendingAnime `json:"seasonalAnime,omitempty"`
+
+	// CurrentSeason indicates the current anime season (e.g., "Winter 2025")
+	// +optional
+	CurrentSeason string `json:"currentSeason,omitempty"`
 
 	// LastChecked is the timestamp of the last activity check
 	LastChecked metav1.Time `json:"lastChecked,omitempty"`
@@ -168,4 +176,3 @@ type AnimeMonitorList struct {
 func init() {
 	SchemeBuilder.Register(&AnimeMonitor{}, &AnimeMonitorList{})
 }
-

@@ -166,3 +166,5 @@ wrangler kv:key get --namespace-id=YOUR_ID "test"
 The worker includes CORS headers. Ensure the frontend URL matches.
 
 
+
+

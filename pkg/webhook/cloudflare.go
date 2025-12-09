@@ -11,10 +11,10 @@ import (
 
 // CloudflareKVClient pushes activity data to Cloudflare Workers KV
 type CloudflareKVClient struct {
-	httpClient   *http.Client
-	accountID    string
-	namespaceID  string
-	apiToken     string
+	httpClient  *http.Client
+	accountID   string
+	namespaceID string
+	apiToken    string
 }
 
 // NewCloudflareKVClient creates a new Cloudflare KV client
@@ -38,6 +38,8 @@ type ActivityPayload struct {
 	WeebcastStatus string         `json:"weebcastStatus"`
 	Metrics        MetricsPayload `json:"metrics"`
 	TrendingAnime  []TrendingItem `json:"trendingAnime,omitempty"`
+	SeasonalAnime  []TrendingItem `json:"seasonalAnime,omitempty"`
+	CurrentSeason  string         `json:"currentSeason,omitempty"`
 	LastUpdated    time.Time      `json:"lastUpdated"`
 }
 
@@ -142,5 +144,3 @@ func (c *WebhookClient) SendNotification(ctx context.Context, webhookURL string,
 
 	return nil
 }
-
-

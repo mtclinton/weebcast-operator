@@ -774,9 +774,33 @@
 
                 ${data.trendingAnime?.length ? `
                     <section class="trending-section">
-                        <h3 class="section-title"><span>📡</span> Storm Fronts (Trending Anime)</h3>
+                        <h3 class="section-title"><span>🔥</span> Trending Anime</h3>
                         <div class="trending-grid">
                             ${data.trendingAnime.slice(0, 8).map(anime => {
+                                const badge = WEATHER_BADGES[anime.activityLevel] || WEATHER_BADGES['Low'];
+                                return `
+                                    <div class="anime-card">
+                                        <img class="anime-image" src="${anime.imageUrl || ''}" alt="${anime.title}" loading="lazy" onerror="this.style.background='linear-gradient(135deg, #1a1a2e, #4a148c)'">
+                                        <div class="anime-info">
+                                            <h4 class="anime-title">${anime.title}</h4>
+                                            <div class="anime-stats">
+                                                <span class="anime-score">★ ${(anime.score || 0).toFixed(1)}</span>
+                                                <span class="anime-members">${formatNumber(anime.members || 0)} weebs</span>
+                                            </div>
+                                            <span class="weather-badge ${badge.class}">${badge.text}</span>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </section>
+                ` : ''}
+
+                ${data.seasonalAnime?.length ? `
+                    <section class="trending-section">
+                        <h3 class="section-title"><span>🌸</span> ${data.currentSeason || 'This Season'}</h3>
+                        <div class="trending-grid">
+                            ${data.seasonalAnime.slice(0, 8).map(anime => {
                                 const badge = WEATHER_BADGES[anime.activityLevel] || WEATHER_BADGES['Low'];
                                 return `
                                     <div class="anime-card">
@@ -885,17 +909,25 @@
                         favorites: 89000
                     },
                     trendingAnime: [
-                        { id: 1, title: 'Solo Leveling', score: 8.7, members: 520000, activityLevel: 'High', imageUrl: '' },
-                        { id: 2, title: 'Frieren: Beyond Journey\'s End', score: 9.1, members: 480000, activityLevel: 'Critical', imageUrl: '' },
+                        { id: 1, title: 'Sousou no Frieren', score: 9.1, members: 1200000, activityLevel: 'Critical', imageUrl: '' },
+                        { id: 2, title: 'One Piece', score: 8.7, members: 2100000, activityLevel: 'High', imageUrl: '' },
+                        { id: 3, title: 'Jujutsu Kaisen', score: 8.6, members: 1800000, activityLevel: 'High', imageUrl: '' },
+                        { id: 4, title: 'Demon Slayer', score: 8.5, members: 1600000, activityLevel: 'High', imageUrl: '' },
                     ],
+                    seasonalAnime: [
+                        { id: 5, title: 'Solo Leveling', score: 8.4, members: 520000, activityLevel: 'High', imageUrl: '' },
+                        { id: 6, title: 'Dungeon Meshi', score: 8.6, members: 380000, activityLevel: 'Medium', imageUrl: '' },
+                        { id: 7, title: 'Mashle S2', score: 8.2, members: 290000, activityLevel: 'Medium', imageUrl: '' },
+                        { id: 8, title: 'Metallic Rouge', score: 7.4, members: 120000, activityLevel: 'Low', imageUrl: '' },
+                    ],
+                    currentSeason: 'Winter 2025',
                     lastUpdated: new Date().toISOString()
                 });
                 
-                // Demo regional forecasts
+                // Demo regional forecasts (tracked specific anime)
                 const demoRegional = renderRegionalForecasts([
-                    { animeName: 'Attack on Titan', activityLevel: 'High', weebcastStatus: '⛈️ STORM WARNING! Heavy titan activity detected!', metrics: { score: 8.5, members: 4200000, watchingCount: 120000 } },
-                    { animeName: 'Death Note', activityLevel: 'Critical', weebcastStatus: '🌀 TYPHOON ALERT! Keikaku doori energy off the charts!', metrics: { score: 8.6, members: 4100000, watchingCount: 95000 } },
-                    { animeName: 'Solo Leveling', activityLevel: 'Medium', weebcastStatus: '⛅ Moderate activity. Sung Jin-Woo fans gathering...', metrics: { score: 8.2, members: 1000000, watchingCount: 250000 } },
+                    { animeName: 'Attack on Titan', animeId: 16498, activityLevel: 'High', weebcastStatus: '⛈️ STORM WARNING! Heavy titan activity detected!', metrics: { score: 8.5, members: 4200000, watchingCount: 120000 } },
+                    { animeName: 'Death Note', animeId: 1535, activityLevel: 'Critical', weebcastStatus: '🌀 TYPHOON ALERT! Keikaku doori energy off the charts!', metrics: { score: 8.6, members: 4100000, watchingCount: 95000 } },
                 ]);
                 document.getElementById('app').innerHTML += demoRegional;
             }

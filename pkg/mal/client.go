@@ -26,25 +26,25 @@ func NewClient() *Client {
 
 // AnimeData represents anime information from MAL
 type AnimeData struct {
-	MalID    int    `json:"mal_id"`
-	URL      string `json:"url"`
-	Title    string `json:"title"`
+	MalID        int    `json:"mal_id"`
+	URL          string `json:"url"`
+	Title        string `json:"title"`
 	TitleEnglish string `json:"title_english"`
-	Images   struct {
+	Images       struct {
 		JPG struct {
 			ImageURL      string `json:"image_url"`
 			SmallImageURL string `json:"small_image_url"`
 			LargeImageURL string `json:"large_image_url"`
 		} `json:"jpg"`
 	} `json:"images"`
-	Score      float64 `json:"score"`
-	ScoredBy   int     `json:"scored_by"`
-	Rank       int     `json:"rank"`
-	Popularity int     `json:"popularity"`
-	Members    int     `json:"members"`
-	Favorites  int     `json:"favorites"`
-	Status     string  `json:"status"`
-	Airing     bool    `json:"airing"`
+	Score      float64          `json:"score"`
+	ScoredBy   int              `json:"scored_by"`
+	Rank       int              `json:"rank"`
+	Popularity int              `json:"popularity"`
+	Members    int              `json:"members"`
+	Favorites  int              `json:"favorites"`
+	Status     string           `json:"status"`
+	Airing     bool             `json:"airing"`
 	Statistics *AnimeStatistics `json:"statistics,omitempty"`
 }
 
@@ -80,7 +80,7 @@ type StatisticsResponse struct {
 // GetAnime fetches details for a specific anime by MAL ID
 func (c *Client) GetAnime(ctx context.Context, malID int) (*AnimeData, error) {
 	url := fmt.Sprintf("%s/anime/%d/full", c.baseURL, malID)
-	
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
@@ -111,7 +111,7 @@ func (c *Client) GetAnime(ctx context.Context, malID int) (*AnimeData, error) {
 // GetAnimeStatistics fetches statistics for a specific anime
 func (c *Client) GetAnimeStatistics(ctx context.Context, malID int) (*AnimeStatistics, error) {
 	url := fmt.Sprintf("%s/anime/%d/statistics", c.baseURL, malID)
-	
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
@@ -142,7 +142,7 @@ func (c *Client) GetAnimeStatistics(ctx context.Context, malID int) (*AnimeStati
 // GetTopAiring fetches the top currently airing anime
 func (c *Client) GetTopAiring(ctx context.Context, limit int) ([]AnimeData, error) {
 	url := fmt.Sprintf("%s/top/anime?filter=airing&limit=%d", c.baseURL, limit)
-	
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
@@ -173,7 +173,7 @@ func (c *Client) GetTopAiring(ctx context.Context, limit int) ([]AnimeData, erro
 // GetSeasonNow fetches anime from the current season
 func (c *Client) GetSeasonNow(ctx context.Context, limit int) ([]AnimeData, error) {
 	url := fmt.Sprintf("%s/seasons/now?limit=%d", c.baseURL, limit)
-	
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
@@ -204,7 +204,7 @@ func (c *Client) GetSeasonNow(ctx context.Context, limit int) ([]AnimeData, erro
 // GetRecentRecommendations fetches recent anime recommendations (indicates user activity)
 func (c *Client) GetRecentRecommendations(ctx context.Context) (int, error) {
 	url := fmt.Sprintf("%s/recommendations/anime", c.baseURL)
-	
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return 0, fmt.Errorf("creating request: %w", err)
@@ -283,4 +283,3 @@ func (c *Client) GetOverallActivity(ctx context.Context) (*ActivityMetrics, erro
 
 	return metrics, nil
 }
-

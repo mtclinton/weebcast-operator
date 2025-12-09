@@ -108,6 +108,11 @@ func (in *AnimeMonitorStatus) DeepCopyInto(out *AnimeMonitorStatus) {
 		*out = make([]TrendingAnime, len(*in))
 		copy(*out, *in)
 	}
+	if in.SeasonalAnime != nil {
+		in, out := &in.SeasonalAnime, &out.SeasonalAnime
+		*out = make([]TrendingAnime, len(*in))
+		copy(*out, *in)
+	}
 	in.LastChecked.DeepCopyInto(&out.LastChecked)
 	in.LastActivityChange.DeepCopyInto(&out.LastActivityChange)
 	if in.Conditions != nil {
@@ -143,4 +148,3 @@ func (in *TrendingAnime) DeepCopy() *TrendingAnime {
 	in.DeepCopyInto(out)
 	return out
 }
-

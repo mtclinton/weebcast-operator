@@ -130,7 +130,7 @@ func (r *AnimeMonitorReconciler) reconcileSpecificAnime(ctx context.Context, mon
 	activityScore := calculateActivityScore(monitor.Status.Metrics)
 	previousLevel := monitor.Status.ActivityLevel
 	monitor.Status.ActivityLevel = r.determineActivityLevel(activityScore, monitor.Spec)
-	
+
 	if previousLevel != monitor.Status.ActivityLevel {
 		monitor.Status.LastActivityChange = metav1.Now()
 	}
@@ -155,10 +155,16 @@ func (r *AnimeMonitorReconciler) reconcileOverallActivity(ctx context.Context, m
 		return fmt.Errorf("fetching overall activity: %w", err)
 	}
 
-	// Get trending anime for the status
+	// Get trending anime (top airing by popularity)
 	topAiring, err := r.MALClient.GetTopAiring(ctx, 10)
 	if err != nil {
 		logger.Info("Could not fetch top airing", "error", err)
+	}
+
+	// Get seasonal anime (current season releases)
+	seasonalAnime, err := r.MALClient.GetSeasonNow(ctx, 10)
+	if err != nil {
+		logger.Info("Could not fetch seasonal anime", "error", err)
 	}
 
 	// Update metrics
@@ -168,30 +174,20 @@ func (r *AnimeMonitorReconciler) reconcileOverallActivity(ctx context.Context, m
 		Score:       metrics.AverageScore,
 	}
 
-	// Build trending anime list
+	// Build trending anime list (top airing)
 	monitor.Status.TrendingAnime = make([]weebcastv1alpha1.TrendingAnime, 0, len(topAiring))
 	for _, anime := range topAiring {
-		trendingLevel := weebcastv1alpha1.ActivityLevelLow
-		if anime.Members > 1000000 {
-			trendingLevel = weebcastv1alpha1.ActivityLevelHigh
-		} else if anime.Members > 500000 {
-			trendingLevel = weebcastv1alpha1.ActivityLevelMedium
-		}
-
-		imageURL := ""
-		if anime.Images.JPG.ImageURL != "" {
-			imageURL = anime.Images.JPG.ImageURL
-		}
-
-		monitor.Status.TrendingAnime = append(monitor.Status.TrendingAnime, weebcastv1alpha1.TrendingAnime{
-			ID:            anime.MalID,
-			Title:         anime.Title,
-			Score:         anime.Score,
-			Members:       anime.Members,
-			ActivityLevel: trendingLevel,
-			ImageURL:      imageURL,
-		})
+		monitor.Status.TrendingAnime = append(monitor.Status.TrendingAnime, r.buildTrendingEntry(anime))
 	}
+
+	// Build seasonal anime list
+	monitor.Status.SeasonalAnime = make([]weebcastv1alpha1.TrendingAnime, 0, len(seasonalAnime))
+	for _, anime := range seasonalAnime {
+		monitor.Status.SeasonalAnime = append(monitor.Status.SeasonalAnime, r.buildTrendingEntry(anime))
+	}
+
+	// Set current season
+	monitor.Status.CurrentSeason = getCurrentSeason()
 
 	// Calculate overall activity level
 	activityScore := metrics.TotalActiveUsers + (metrics.TotalMembers / 1000)
@@ -205,8 +201,8 @@ func (r *AnimeMonitorReconciler) reconcileOverallActivity(ctx context.Context, m
 	// Set Weebcast status
 	monitor.Status.WeebcastStatus = r.deriveWeebcastStatus(monitor.Status.ActivityLevel, "")
 	monitor.Status.LastChecked = metav1.Now()
-	monitor.Status.Message = fmt.Sprintf("Overall MAL Activity: %d active users across %d members, tracking %d trending anime",
-		metrics.TotalActiveUsers, metrics.TotalMembers, len(topAiring))
+	monitor.Status.Message = fmt.Sprintf("Overall MAL Activity: %d active users across %d members, tracking %d trending + %d seasonal anime",
+		metrics.TotalActiveUsers, metrics.TotalMembers, len(topAiring), len(seasonalAnime))
 
 	return nil
 }
@@ -294,10 +290,54 @@ func (r *AnimeMonitorReconciler) setErrorCondition(monitor *weebcastv1alpha1.Ani
 	})
 }
 
+// buildTrendingEntry creates a TrendingAnime entry from MAL anime data
+func (r *AnimeMonitorReconciler) buildTrendingEntry(anime mal.AnimeData) weebcastv1alpha1.TrendingAnime {
+	activityLevel := weebcastv1alpha1.ActivityLevelLow
+	if anime.Members > 1000000 {
+		activityLevel = weebcastv1alpha1.ActivityLevelHigh
+	} else if anime.Members > 500000 {
+		activityLevel = weebcastv1alpha1.ActivityLevelMedium
+	}
+
+	imageURL := ""
+	if anime.Images.JPG.ImageURL != "" {
+		imageURL = anime.Images.JPG.ImageURL
+	}
+
+	return weebcastv1alpha1.TrendingAnime{
+		ID:            anime.MalID,
+		Title:         anime.Title,
+		Score:         anime.Score,
+		Members:       anime.Members,
+		ActivityLevel: activityLevel,
+		ImageURL:      imageURL,
+	}
+}
+
+// getCurrentSeason returns the current anime season (e.g., "Winter 2025")
+func getCurrentSeason() string {
+	now := time.Now()
+	month := now.Month()
+	year := now.Year()
+
+	var season string
+	switch {
+	case month >= 1 && month <= 3:
+		season = "Winter"
+	case month >= 4 && month <= 6:
+		season = "Spring"
+	case month >= 7 && month <= 9:
+		season = "Summer"
+	default:
+		season = "Fall"
+	}
+
+	return fmt.Sprintf("%s %d", season, year)
+}
+
 // SetupWithManager sets up the controller with the Manager
 func (r *AnimeMonitorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&weebcastv1alpha1.AnimeMonitor{}).
 		Complete(r)
 }
-

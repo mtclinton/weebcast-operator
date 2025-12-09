@@ -44,6 +44,11 @@ spec:
           type: string
           jsonPath: .status.phase
           description: Current phase
+        - name: Season
+          type: string
+          jsonPath: .status.currentSeason
+          description: Current anime season
+          priority: 1
         - name: Age
           type: date
           jsonPath: .metadata.creationTimestamp
@@ -142,7 +147,7 @@ spec:
                       description: Favorites count
                 trendingAnime:
                   type: array
-                  description: Currently trending anime on MAL
+                  description: Currently trending anime on MAL (top airing by popularity)
                   items:
                     type: object
                     properties:
@@ -165,6 +170,34 @@ spec:
                       imageUrl:
                         type: string
                         description: Cover image URL
+                seasonalAnime:
+                  type: array
+                  description: Anime from the current season
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: MAL anime ID
+                      title:
+                        type: string
+                        description: Anime title
+                      score:
+                        type: number
+                        description: Current score
+                      members:
+                        type: integer
+                        description: Member count
+                      activityLevel:
+                        type: string
+                        enum: [Low, Medium, High, Critical]
+                        description: Activity level for this anime
+                      imageUrl:
+                        type: string
+                        description: Cover image URL
+                currentSeason:
+                  type: string
+                  description: Current anime season (e.g., "Winter 2025")
                 lastChecked:
                   type: string
                   format: date-time

@@ -34,6 +34,10 @@ export default {
       return handleGetTrending(env, corsHeaders);
     }
 
+    if (url.pathname === '/api/seasonal') {
+      return handleGetSeasonal(env, corsHeaders);
+    }
+
     // POST endpoint for syncing data (local development / operator webhook)
     if (url.pathname === '/api/sync' && request.method === 'POST') {
       return handleSync(request, env, corsHeaders);
@@ -46,6 +50,7 @@ export default {
         '/api/activity/all - All monitors',
         '/api/anime/:id - Specific anime activity',
         '/api/trending - Trending anime list',
+        '/api/seasonal - Current season anime',
         'POST /api/sync - Sync data from operator (dev)'
       ]
     }), {
@@ -146,6 +151,47 @@ async function handleGetTrending(env, corsHeaders) {
   }
 }
 
+async function handleGetSeasonal(env, corsHeaders) {
+  try {
+    const data = await env.WEEBCAST_KV.get('mal-overall', 'json');
+    
+    if (!data) {
+      return new Response(JSON.stringify({ seasonal: [], season: getCurrentSeason() }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Use seasonalAnime if available, fall back to trendingAnime for backwards compatibility
+    const seasonalList = data.seasonalAnime || data.trendingAnime || [];
+
+    return new Response(JSON.stringify({ 
+      seasonal: seasonalList,
+      season: data.currentSeason || getCurrentSeason()
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+function getCurrentSeason() {
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  
+  let season;
+  if (month >= 0 && month <= 2) season = 'Winter';
+  else if (month >= 3 && month <= 5) season = 'Spring';
+  else if (month >= 6 && month <= 8) season = 'Summer';
+  else season = 'Fall';
+  
+  return `${season} ${year}`;
+}
+
 // Handle sync from operator (for local development)
 async function handleSync(request, env, corsHeaders) {
   try {
@@ -161,6 +207,8 @@ async function handleSync(request, env, corsHeaders) {
       weebcastStatus: payload.weebcastStatus,
       metrics: payload.metrics,
       trendingAnime: payload.trendingAnime,
+      seasonalAnime: payload.seasonalAnime,
+      currentSeason: payload.currentSeason,
       lastUpdated: payload.lastUpdated || new Date().toISOString()
     }));
 
