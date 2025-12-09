@@ -38,6 +38,9 @@ func (r *AnimeMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// Keep a copy of the original for patching
+	monitorPatch := client.MergeFrom(monitor.DeepCopy())
+
 	// Update status phase
 	monitor.Status.Phase = "Monitoring"
 
@@ -47,7 +50,7 @@ func (r *AnimeMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		if err := r.reconcileSpecificAnime(ctx, monitor); err != nil {
 			logger.Error(err, "Failed to reconcile specific anime")
 			r.setErrorCondition(monitor, err)
-			if updateErr := r.Status().Update(ctx, monitor); updateErr != nil {
+			if updateErr := r.Status().Patch(ctx, monitor, monitorPatch); updateErr != nil {
 				logger.Error(updateErr, "Failed to update status")
 			}
 			return ctrl.Result{RequeueAfter: time.Minute}, nil
@@ -57,7 +60,7 @@ func (r *AnimeMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		if err := r.reconcileOverallActivity(ctx, monitor); err != nil {
 			logger.Error(err, "Failed to reconcile overall activity")
 			r.setErrorCondition(monitor, err)
-			if updateErr := r.Status().Update(ctx, monitor); updateErr != nil {
+			if updateErr := r.Status().Patch(ctx, monitor, monitorPatch); updateErr != nil {
 				logger.Error(updateErr, "Failed to update status")
 			}
 			return ctrl.Result{RequeueAfter: time.Minute}, nil
@@ -67,8 +70,8 @@ func (r *AnimeMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	// Set success condition
 	r.setReadyCondition(monitor)
 
-	// Update the status
-	if err := r.Status().Update(ctx, monitor); err != nil {
+	// Patch the status (more resilient to concurrent modifications than Update)
+	if err := r.Status().Patch(ctx, monitor, monitorPatch); err != nil {
 		logger.Error(err, "Failed to update AnimeMonitor status")
 		return ctrl.Result{}, err
 	}
