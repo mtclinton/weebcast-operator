@@ -58,6 +58,8 @@ echo "$monitors" | jq -c '.items[]' | while read -r item; do
             favorites: (.status.metrics.favorites // 0)
         },
         trendingAnime: (.status.trendingAnime // []),
+        seasonalAnime: (.status.seasonalAnime // []),
+        currentSeason: (.status.currentSeason // null),
         lastUpdated: .status.lastChecked
     }')
     
